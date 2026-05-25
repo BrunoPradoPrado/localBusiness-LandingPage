@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Energia Solar — Modelagem Matemática · IFSC Chapecó</title>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --sun:#f59e0b;
+  --sun-light:#fef3c7;
+  --green:#059669;
+  --green-light:#d1fae5;
+  --green-mid:#065f46;
+  --red:#ef4444;
+  --dark:#0c1a12;
+  --dark2:#1a2e1e;
+  --mid:#374151;
+  --gray:#6b7280;
+  --light:#f9fafb;
+  --white:#ffffff;
+  --border:#e5e7eb;
+  --r:20px;
+}
+
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--light);
+  color:var(--dark);
+  overflow-x:hidden;
+}
+
+/* ─── HERO ─── */
+.hero{
+  position:relative;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:80px 60px;
+  background:var(--dark);
+  overflow:hidden;
+}
+
+.hero-bg{
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 70% 40%, rgba(5,150,105,.35) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 20% 80%, rgba(245,158,11,.12) 0%, transparent 50%),
+    #0c1a12;
+}
+
+/* Grid lines */
+.hero-grid{
+  position:absolute;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size:60px 60px;
+}
+
+.hero-orb{
+  position:absolute;
+  width:500px;height:500px;
+  right:-100px;top:50%;
+  transform:translateY(-50%);
+  background:radial-gradient(circle, rgba(5,150,105,.3), transparent 70%);
+  border-radius:50%;
+  animation:breathe 6s ease-in-out infinite;
+}
+
+@keyframes breathe{
+  0%,100%{transform:translateY(-50%) scale(1)}
+  50%{transform:translateY(-52%) scale(1.08)}
+}
+
+.hero-content{
+  position:relative;
+  z-index:2;
+  max-width:900px;
+}
+
+.badge-row{
+  display:flex;gap:10px;flex-wrap:wrap;
+  margin-bottom:32px;
+}
+
+.badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 18px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:100px;
+  background:rgba(255,255,255,.06);
+  backdrop-filter:blur(10px);
+  color:#a7f3d0;
+  font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+}
+
+.badge .dot{
+  width:8px;height:8px;background:#22c55e;
+  border-radius:50%;animation:pulse 1.8s infinite;
+}
+
+@keyframes pulse{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.5;transform:scale(1.6)}
+}
+
+.hero h1{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(48px,7vw,88px);
+  line-height:1.02;
+  color:#fff;
+  margin-bottom:28px;
+  letter-spacing:-.02em;
+}
+
+.hero h1 em{
+  font-style:italic;
+  color:#6ee7b7;
+}
+
+.hero-sub{
+  color:#a7f3d0;
+  font-size:17px;line-height:1.8;
+  max-width:580px;
+  margin-bottom:52px;
+}
+
+.hero-kpis{
+  display:flex;gap:16px;flex-wrap:wrap;
+}
+
+.kpi{
+  padding:24px 28px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.05);
+  backdrop-filter:blur(14px);
+  min-width:170px;
+}
+
+.kpi i{font-size:20px;color:#6ee7b7;margin-bottom:10px}
+.kpi strong{display:block;font-size:32px;font-weight:700;color:#fff;line-height:1}
+.kpi span{font-size:12px;color:#6ee7b7;margin-top:6px;display:block}
+
+/* ─── SCROLL INDICATOR ─── */
+.scroll-hint{
+  position:absolute;
+  bottom:36px;left:60px;
+  color:rgba(255,255,255,.3);
+  font-size:12px;letter-spacing:.1em;
+  display:flex;align-items:center;gap:10px;
+  z-index:2;
+}
+.scroll-line{
+  width:40px;height:1px;
+  background:rgba(255,255,255,.2);
+}
+
+/* ─── SECTION WRAPPER ─── */
+.wrap{
+  max-width:1160px;
+  margin:0 auto;
+  padding:0 28px;
+}
+
+/* ─── SECTION LABEL ─── */
+.sec-label{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--green);
+  margin-bottom:14px;
+}
+.sec-label::before{
+  content:'';
+  display:block;width:24px;height:2px;
+  background:var(--green);
+}
+
+/* ─── TEAM STRIP ─── */
+.team-strip{
+  background:var(--dark2);
+  padding:22px 28px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:16px;
+}
+.team-strip .names{
+  color:#a7f3d0;font-size:14px;font-weight:500;
+}
+.team-strip .names strong{color:#fff}
+.team-strip .prof{
+  color:#6ee7b7;font-size:13px;
+}
+
+/* ─── MAIN ─── */
+.main{padding:60px 0 80px}
+
+/* ─── CARD ─── */
+.card{
+  background:#fff;
+  border-radius:var(--r);
+  padding:34px;
+  margin-bottom:24px;
+  border:1px solid var(--border);
+  box-shadow:0 4px 24px rgba(0,0,0,.05);
+  transition:.3s ease;
+}
+.card:hover{
+  box-shadow:0 12px 40px rgba(5,150,105,.1);
+  transform:translateY(-3px);
+}
+
+.card-header{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  margin-bottom:28px;flex-wrap:wrap;gap:12px;
+}
+
+.card-title-block h2{
+  font-family:'DM Serif Display',serif;
+  font-size:24px;color:var(--dark);
+  margin-bottom:4px;
+}
+.card-title-block p{
+  font-size:13px;color:var(--gray);
+}
+
+.card-num{
+  width:42px;height:42px;
+  border-radius:12px;
+  background:var(--green-light);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:700;color:var(--green-mid);
+  flex-shrink:0;
+}
+
+/* ─── PROBLEMA ─── */
+.problema-box{
+  background:linear-gradient(135deg,#ecfdf5,#d1fae5);
+  border-radius:16px;
+  padding:26px 30px;
+  border-left:5px solid var(--green);
+  font-size:17px;line-height:1.7;
+  color:var(--green-mid);
+  font-style:italic;
+  font-family:'DM Serif Display',serif;
+}
+
+/* ─── VARIAVEIS ─── */
+.vars-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:16px;
+}
+
+.var-item{
+  background:var(--light);
+  border-radius:16px;
+  padding:20px;
+  border:1.5px solid var(--border);
+  display:flex;gap:14px;align-items:flex-start;
+}
+
+.var-icon{
+  width:44px;height:44px;
+  border-radius:12px;
+  background:#ecfdf5;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:var(--green);
+  flex-shrink:0;
+}
+
+.var-info{
+  flex:1;
+}
+.var-info .lbl{
+  font-size:12px;font-weight:700;
+  color:var(--gray);letter-spacing:.06em;text-transform:uppercase;
+  margin-bottom:5px;
+}
+.var-info .sym{
+  font-size:20px;font-weight:700;color:var(--dark);
+  font-family:'DM Serif Display',serif;
+}
+.var-info .desc{
+  font-size:12px;color:var(--gray);margin-top:3px;
+}
+
+/* ─── HIPOTESES ─── */
+.hip-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:12px;
+}
+.hip{
+  display:flex;gap:12px;align-items:flex-start;
+  background:var(--light);
+  padding:16px;border-radius:14px;
+  border:1px solid var(--border);
+}
+.hip i{color:var(--sun);font-size:14px;margin-top:2px;flex-shrink:0}
+.hip p{font-size:13px;line-height:1.6;color:var(--mid)}
+
+/* ─── FORM ─── */
+.form-intro{
+  background:linear-gradient(135deg,#fffbeb,#fef3c7);
+  border-radius:14px;
+  padding:18px 22px;
+  border-left:4px solid var(--sun);
+  font-size:13px;color:#92400e;
+  margin-bottom:24px;
+  line-height:1.6;
+}
+.form-intro strong{color:#78350f}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:18px;
+}
+
+.field label{
+  display:flex;align-items:center;gap:8px;
+  font-size:13px;font-weight:600;color:var(--mid);
+  margin-bottom:8px;
+}
+.field label i{color:var(--green);font-size:12px}
+
+.field input{
+  width:100%;height:52px;
+  border-radius:14px;
+  border:1.5px solid var(--border);
+  padding:0 18px;
+  font-family:'DM Sans',sans-serif;
+  font-size:15px;color:var(--dark);
+  background:#fff;
+  transition:.2s;
+}
+.field input:focus{
+  outline:none;
+  border-color:var(--green);
+  box-shadow:0 0 0 4px rgba(5,150,105,.12);
+}
+
+.field-hint{
+  font-size:11px;color:var(--gray);margin-top:6px;
+  display:flex;align-items:center;gap:5px;
+}
+.field-hint::before{
+  content:'→';color:var(--green);
+}
+
+/* FORMULA INLINE */
+.field-formula{
+  font-size:11px;
+  color:var(--green-mid);
+  background:var(--green-light);
+  border-radius:8px;
+  padding:5px 10px;
+  margin-top:6px;
+  font-family:monospace;
+  display:inline-block;
+}
+
+.btn-calc{
+  width:100%;margin-top:28px;height:60px;
+  border:none;border-radius:16px;cursor:pointer;
+  background:linear-gradient(135deg,#047857,#059669);
+  color:#fff;font-size:16px;font-weight:700;
+  font-family:'DM Sans',sans-serif;
+  letter-spacing:.04em;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  transition:.3s;
+}
+.btn-calc:hover{
+  transform:translateY(-2px);
+  box-shadow:0 16px 40px rgba(5,150,105,.28);
+}
+
+/* ─── MATEMATIZACAO ─── */
+.math-section{
+  background:var(--dark);
+  border-radius:20px;
+  padding:30px;
+  margin-bottom:24px;
+}
+.math-section .sec-label{color:#6ee7b7}
+.math-section .sec-label::before{background:#6ee7b7}
+
+.math-steps{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:16px;
+  margin-top:20px;
+}
+
+.math-step{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;
+  padding:22px;
+}
+.math-step .step-num{
+  font-size:11px;font-weight:700;letter-spacing:.1em;
+  color:#6ee7b7;text-transform:uppercase;margin-bottom:10px;
+}
+.math-step h4{
+  color:#fff;font-size:15px;font-weight:600;margin-bottom:14px;
+}
+.math-step code{
+  color:#a7f3d0;font-size:13px;line-height:2.1;
+  display:block;font-family:monospace;
+}
+.math-step code em{
+  color:var(--sun);font-style:normal;
+}
+
+/* ─── RESULTADO ─── */
+.verdict{
+  padding:22px 24px;
+  border-radius:16px;
+  background:linear-gradient(135deg,#ecfdf5,#d1fae5);
+  border-left:5px solid var(--green);
+  line-height:1.7;font-size:15px;
+  margin-bottom:24px;
+  color:var(--green-mid);
+}
+
+.metrics{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  gap:14px;
+}
+
+.met{
+  background:var(--light);
+  border-radius:18px;
+  padding:22px 20px;
+  border:1.5px solid var(--border);
+  position:relative;overflow:hidden;
+  transition:.2s;
+}
+.met:hover{border-color:var(--green);transform:translateY(-3px)}
+
+.met-icon{
+  width:36px;height:36px;
+  border-radius:10px;
+  background:var(--green-light);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;color:var(--green);
+  margin-bottom:14px;
+}
+.met-lbl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gray);margin-bottom:6px}
+.met-val{font-size:26px;font-weight:700;color:var(--green-mid);line-height:1;font-family:'DM Serif Display',serif}
+.met-sub{font-size:11px;color:var(--gray);margin-top:5px}
+
+/* ─── CHARTS ─── */
+.chart-card{
+  background:#fff;
+  border-radius:var(--r);
+  padding:34px;
+  margin-bottom:24px;
+  border:1px solid var(--border);
+  box-shadow:0 4px 24px rgba(0,0,0,.05);
+}
+
+.chart-header{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  flex-wrap:wrap;gap:12px;
+  margin-bottom:24px;
+}
+.chart-title{
+  font-family:'DM Serif Display',serif;
+  font-size:22px;color:var(--dark);
+  margin-bottom:4px;
+}
+.chart-sub{font-size:13px;color:var(--gray)}
+
+.chart-wrap{
+  background:var(--light);
+  border-radius:16px;
+  padding:24px;
+  border:1px solid var(--border);
+}
+
+.insight{
+  margin-top:18px;
+  padding:16px 20px;
+  background:#ecfdf5;
+  border-radius:14px;
+  border-left:4px solid var(--green);
+  font-size:13px;line-height:1.7;color:var(--green-mid);
+}
+
+/* ─── APARELHOS ─── */
+.appliances{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:16px;
+}
+.appliance{
+  background:var(--light);
+  border-radius:16px;padding:24px 20px;
+  text-align:center;
+  border:1.5px solid var(--border);
+  transition:.2s;
+}
+.appliance:hover{border-color:var(--green);transform:translateY(-3px)}
+.appliance i{font-size:28px;color:var(--green);margin-bottom:14px}
+.appliance strong{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
+.appliance .kwh{font-size:22px;font-weight:700;color:var(--green-mid);font-family:'DM Serif Display',serif}
+.appliance span{font-size:12px;color:var(--gray)}
+
+/* ─── INTERPRETACAO ─── */
+.interp-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+@media(max-width:680px){.interp-grid{grid-template-columns:1fr}}
+
+.interp-box{
+  background:var(--light);
+  border-radius:16px;padding:24px;
+  border:1.5px solid var(--border);
+}
+.interp-box h4{
+  font-size:15px;font-weight:700;
+  margin-bottom:14px;color:var(--dark);
+  display:flex;align-items:center;gap:10px;
+}
+.interp-box h4 i{color:var(--green);font-size:14px}
+.interp-box ul{
+  list-style:none;
+  display:flex;flex-direction:column;gap:8px;
+}
+.interp-box ul li{
+  font-size:13px;line-height:1.6;color:var(--mid);
+  display:flex;gap:10px;align-items:flex-start;
+}
+.interp-box ul li::before{
+  content:'→';color:var(--green);font-weight:700;flex-shrink:0;
+}
+
+.concl-box{
+  background:var(--dark);
+  border-radius:16px;padding:26px;
+  color:#a7f3d0;font-size:14px;line-height:1.8;
+  margin-top:20px;
+}
+.concl-box strong{color:#fff}
+
+/* ─── FOOTER ─── */
+.footer{
+  background:var(--dark2);
+  padding:32px;
+  text-align:center;
+  color:rgba(255,255,255,.3);
+  font-size:12px;letter-spacing:.06em;
+}
+.footer span{color:#6ee7b7}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:700px){
+  .hero{padding:60px 24px;min-height:90vh}
+  .math-section{padding:22px 18px}
+  .card{padding:22px 18px}
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-orb"></div>
+
+  <div class="hero-content">
+    <div class="badge-row">
+      <div class="badge">
+        <i class="fa-solid fa-solar-panel"></i>
+        IFSC · Campus Chapecó
+      </div>
+      <div class="badge">
+        <i class="fa-solid fa-calculator"></i>
+        Modelagem Matemática Aplicada
+      </div>
+      <div class="badge">
+        <span class="dot"></span>
+        Dados em tempo real
+      </div>
+    </div>
+
+    <h1>Energia Solar<br><em>Fotovoltaica</em></h1>
+
+    <p class="hero-sub">
+      Análise matemática completa da viabilidade econômica,
+      consumo energético e impacto ambiental de sistemas
+      fotovoltaicos residenciais — do problema à solução.
+    </p>
+
+    <div class="hero-kpis">
+      <div class="kpi">
+        <i class="fa-solid fa-bolt"></i>
+        <strong>95%</strong>
+        <span>economia possível</span>
+      </div>
+      <div class="kpi">
+        <i class="fa-solid fa-leaf"></i>
+        <strong>0 CO₂</strong>
+        <span>energia limpa</span>
+      </div>
+      <div class="kpi">
+        <i class="fa-solid fa-calendar"></i>
+        <strong>25 anos</strong>
+        <span>vida útil média</span>
+      </div>
+      <div class="kpi">
+        <i class="fa-solid fa-location-dot"></i>
+        <strong>Chapecó</strong>
+        <span>SC · Brasil</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    ROLE PARA EXPLORAR
+  </div>
+</section>
+
+<!-- TEAM STRIP -->
+<div class="team-strip">
+  <div class="names">
+    <strong>Alunos:</strong> João Vitor · Bruno · Lucas D. · Luiz
+  </div>
+  <div class="prof">
+    Prof. <strong style="color:#fff">Flávio Fernandes</strong>
+  </div>
+</div>
+
+<div class="main">
+<div class="wrap">
+
+  <!-- 1. PROBLEMA DE PESQUISA -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-block">
+        <div class="sec-label">Etapa 1</div>
+        <h2>Problema de Pesquisa</h2>
+        <p>A questão central que orienta toda a análise</p>
+      </div>
+      <div class="card-num">01</div>
+    </div>
+
+    <div class="problema-box">
+      "Quantos painéis solares são necessários para suprir o consumo elétrico de uma família de 4 pessoas que possui conta de energia acima de R$ 250,00 por mês?"
+    </div>
+  </div>
+
+  <!-- 2. VARIAVEIS E DADOS -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-block">
+        <div class="sec-label">Etapa 2</div>
+        <h2>Variáveis e Dados</h2>
+        <p>Todas as grandezas utilizadas no modelo matemático</p>
+      </div>
+      <div class="card-num">02</div>
+    </div>
+
+    <div class="vars-grid">
+      <div class="var-item">
+        <div class="var-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+        <div class="var-info">
+          <div class="lbl">Conta de luz</div>
+          <div class="sym">C = R$ 300,00/mês</div>
+          <div class="desc">Valor médio mensal da família</div>
+        </div>
+      </div>
+      <div class="var-item">
+        <div class="var-icon"><i class="fa-solid fa-plug"></i></div>
+        <div class="var-info">
+          <div class="lbl">Tarifa de energia</div>
+          <div class="sym">T = R$ 1,00/kWh</div>
+          <div class="desc">Valor cobrado pela distribuidora</div>
+        </div>
+      </div>
+      <div class="var-item">
+        <div class="var-icon"><i class="fa-solid fa-gauge-high"></i></div>
+        <div class="var-info">
+          <div class="lbl">Consumo mensal</div>
+          <div class="sym">E = 300 kWh/mês</div>
+          <div class="desc">Energia consumida estimada</div>
+        </div>
+      </div>
+      <div class="var-item">
+        <div class="var-icon"><i class="fa-solid fa-calendar-day"></i></div>
+        <div class="var-info">
+          <div class="lbl">Consumo diário</div>
+          <div class="sym">E<sub>d</sub> = 10 kWh/dia</div>
+          <div class="desc">300 ÷ 30 dias</div>
+        </div>
+      </div>
+      <div class="var-item">
+        <div class="var-icon"><i class="fa-solid fa-solar-panel"></i></div>
+        <div class="var-info">
+          <div class="lbl">Potência de cada placa</div>
+          <div class="sym">P = 550 W</div>
+          <div class="desc">Modelo de referência da atividade</div>
+        </div>
+      </div>
+      <div class="var-item">
+        <div class="var-icon"><i class="fa-solid fa-bolt"></i></div>
+        <div class="var-info">
+          <div class="lbl">Produção por placa/dia</div>
+          <div class="sym">G = 2,2 kWh/dia</div>
+          <div class="desc">Estimativa média de geração</div>
+        </div>
+      </div>
+      <div class="var-item">
+        <div class="var-icon"><i class="fa-solid fa-sun"></i></div>
+        <div class="var-info">
+          <div class="lbl">Horas de sol</div>
+          <div class="sym">H = 4 a 5 h/dia</div>
+          <div class="desc">Média da região de Chapecó-SC</div>
+        </div>
+      </div>
+      <div class="var-item">
+        <div class="var-icon"><i class="fa-solid fa-people-group"></i></div>
+        <div class="var-info">
+          <div class="lbl">Moradores</div>
+          <div class="sym">N = 4 pessoas</div>
+          <div class="desc">Tamanho da família analisada</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. HIPOTESES -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-block">
+        <div class="sec-label">Etapa 3</div>
+        <h2>Hipóteses e Simplificações</h2>
+        <p>Premissas assumidas para viabilizar o modelo</p>
+      </div>
+      <div class="card-num">03</div>
+    </div>
+
+    <div class="hip-list">
+      <div class="hip">
+        <i class="fa-solid fa-circle-check"></i>
+        <p>O número de pessoas permanece inalterado ao longo do período analisado</p>
+      </div>
+      <div class="hip">
+        <i class="fa-solid fa-circle-check"></i>
+        <p>Utilizou-se placa solar de <strong>550 W</strong> como referência (Marca A)</p>
+      </div>
+      <div class="hip">
+        <i class="fa-solid fa-circle-check"></i>
+        <p>Não foram considerados aumentos futuros na tarifa de energia</p>
+      </div>
+      <div class="hip">
+        <i class="fa-solid fa-circle-check"></i>
+        <p>O sistema terá funcionamento eficiente o ano todo</p>
+      </div>
+      <div class="hip">
+        <i class="fa-solid fa-circle-check"></i>
+        <p>O telhado suporta a instalação das placas</p>
+      </div>
+      <div class="hip">
+        <i class="fa-solid fa-circle-check"></i>
+        <p>Foram consideradas médias de geração e consumo (potências máximas)</p>
+      </div>
+      <div class="hip">
+        <i class="fa-solid fa-circle-check"></i>
+        <p>A família pode obter equipamentos elétricos que não possuem atualmente</p>
+      </div>
+      <div class="hip">
+        <i class="fa-solid fa-circle-check"></i>
+        <p>Horas de sol: média de 4 a 5 h/dia para Chapecó-SC</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. MATEMATIZACAO -->
+  <div class="math-section">
+    <div class="sec-label">Etapa 4</div>
+    <h2 style="font-family:'DM Serif Display',serif;font-size:28px;color:#fff;margin-bottom:6px">Matematização</h2>
+    <p style="color:#a7f3d0;font-size:14px">Todos os cálculos organizados passo a passo</p>
+
+    <div class="math-steps">
+      <div class="math-step">
+        <div class="step-num">Passo 1 · Consumo</div>
+        <h4>Energia consumida</h4>
+        <code>
+Consumo = C ÷ T<br>
+Consumo = 300 ÷ 1<br>
+<em>Consumo = 300 kWh/mês</em><br><br>
+Diário = 300 ÷ 30<br>
+<em>Diário = 10 kWh/dia</em>
+        </code>
+      </div>
+
+      <div class="math-step">
+        <div class="step-num">Passo 2 · Painéis</div>
+        <h4>Número de placas</h4>
+        <code>
+Cada placa = 550 W = 0,55 kWp<br>
+Geração/placa ≈ 2,2 kWh/dia<br><br>
+N = Diário ÷ G<br>
+N = 10 ÷ 2,2<br>
+<em>N ≈ 4,54 → 5 painéis</em><br>
+<em>5 × 550 W = 2.750 W = 2,75 kWp</em>
+        </code>
+      </div>
+
+      <div class="math-step">
+        <div class="step-num">Passo 3 · Economia</div>
+        <h4>Retorno financeiro</h4>
+        <code>
+Economia mensal = R$ 300<br>
+Economia anual = 300 × 12<br>
+<em>Economia anual = R$ 3.600</em><br><br>
+Payback = Custo ÷ Eco. anual<br>
+<em>Payback ≈ 6,9 anos</em>
+        </code>
+      </div>
+
+      <div class="math-step">
+        <div class="step-num">Passo 4 · Ambiente</div>
+        <h4>Impacto ambiental</h4>
+        <code>
+Geração anual = G × 12<br>
+CO₂ evitado = G × 0,092 kg<br><br>
+Árvores equiv. = CO₂ ÷ 21 kg<br>
+<em>1 árvore absorve ~21 kg CO₂/ano</em>
+        </code>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. CALCULADORA -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-block">
+        <div class="sec-label">Etapa 5 · Calculadora Interativa</div>
+        <h2>Insira os dados da residência</h2>
+        <p>Os resultados são calculados automaticamente com as fórmulas do modelo</p>
+      </div>
+      <div class="card-num">05</div>
+    </div>
+
+    <div class="form-intro">
+      <strong>Como funciona:</strong> cada campo abaixo corresponde a uma variável do modelo matemático.
+      Ao clicar em "Calcular", as fórmulas da etapa anterior são aplicadas e os resultados aparecem logo abaixo.
+    </div>
+
+    <div class="form-grid">
+      <div class="field">
+        <label><i class="fa-solid fa-file-invoice-dollar"></i> Conta mensal (R$)</label>
+        <input type="number" id="conta" value="300">
+        <div class="field-hint">Média da conta de luz da família</div>
+        <div class="field-formula">C = valor da conta</div>
+      </div>
+
+      <div class="field">
+        <label><i class="fa-solid fa-plug"></i> Tarifa kWh (R$)</label>
+        <input type="number" id="kwh" value="1" step="0.01">
+        <div class="field-hint">Valor cobrado pela distribuidora</div>
+        <div class="field-formula">T = tarifa (R$/kWh)</div>
+      </div>
+
+      <div class="field">
+        <label><i class="fa-solid fa-sun"></i> Horas de sol por dia</label>
+        <input type="number" id="sol" value="4.5" step="0.1">
+        <div class="field-hint">Média da região (Chapecó: 4–5 h)</div>
+        <div class="field-formula">H = horas de insolação</div>
+      </div>
+
+      <div class="field">
+        <label><i class="fa-solid fa-solar-panel"></i> Potência da placa (W)</label>
+        <input type="number" id="potPlaca" value="550">
+        <div class="field-hint">Modelo da atividade: 550 W</div>
+        <div class="field-formula">P = potência por painel</div>
+      </div>
+
+      <div class="field">
+        <label><i class="fa-solid fa-money-bill-wave"></i> Custo instalação (R$)</label>
+        <input type="number" id="custo" value="25000">
+        <div class="field-hint">Sistema fotovoltaico completo</div>
+        <div class="field-formula">I = investimento inicial</div>
+      </div>
+
+      <div class="field">
+        <label><i class="fa-solid fa-calendar"></i> Vida útil (anos)</label>
+        <input type="number" id="vida" value="25">
+        <div class="field-hint">Tempo médio dos painéis solares</div>
+        <div class="field-formula">n = vida útil</div>
+      </div>
+
+      <div class="field">
+        <label><i class="fa-solid fa-people-group"></i> Número de moradores</label>
+        <input type="number" id="moradores" value="4">
+        <div class="field-hint">Quantidade de pessoas na residência</div>
+        <div class="field-formula">N = moradores</div>
+      </div>
+    </div>
+
+    <button class="btn-calc" onclick="calcular()">
+      <i class="fa-solid fa-calculator"></i>
+      CALCULAR VIABILIDADE
+    </button>
+  </div>
+
+  <!-- 6. RESULTADO -->
+  <div class="card" id="resultado-card">
+    <div class="card-header">
+      <div class="card-title-block">
+        <div class="sec-label">Etapa 6 · Resolução</div>
+        <h2>Resultado da Análise</h2>
+        <p>Resposta ao problema de pesquisa</p>
+      </div>
+      <div class="card-num">06</div>
+    </div>
+
+    <div class="verdict" id="verdict">
+      Preencha os campos acima e clique em <strong>Calcular Viabilidade</strong> para obter os resultados.
+    </div>
+
+    <div class="metrics" id="mets"></div>
+  </div>
+
+  <!-- GRAFICOS -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <div>
+        <div class="sec-label">Análise Financeira</div>
+        <div class="chart-title">Fluxo Financeiro Acumulado</div>
+        <div class="chart-sub">Evolução do saldo financeiro ao longo dos anos</div>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="chart1"></canvas>
+    </div>
+    <div class="insight" id="insight1">
+      O ponto em que a curva verde cruza o zero representa o <strong>payback</strong> — momento em que o investimento é recuperado.
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <div>
+        <div class="sec-label">Comparativo</div>
+        <div class="chart-title">Custo Total: Solar × Convencional</div>
+        <div class="chart-sub">Quanto cada opção custa ao longo do tempo</div>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="chart2"></canvas>
+    </div>
+    <div class="insight" id="insight2">
+      Sem energia solar, a família acumula apenas gastos. Com o sistema fotovoltaico, o investimento inicial é diluído pela economia gerada.
+    </div>
+  </div>
+
+  <!-- CONSUMO ELETRODOMESTICOS -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-block">
+        <div class="sec-label">Referência</div>
+        <h2>Consumo Médio de Aparelhos</h2>
+        <p>Para contextualizar os 300 kWh mensais da família</p>
+      </div>
+      <div class="card-num"><i class="fa-solid fa-chart-bar" style="font-size:16px"></i></div>
+    </div>
+    <div class="appliances">
+      <div class="appliance">
+        <i class="fa-solid fa-snowflake"></i>
+        <strong>Ar-condicionado</strong>
+        <div class="kwh">120</div>
+        <span>kWh/mês</span>
+      </div>
+      <div class="appliance">
+        <i class="fa-solid fa-shower"></i>
+        <strong>Chuveiro elétrico</strong>
+        <div class="kwh">90</div>
+        <span>kWh/mês</span>
+      </div>
+      <div class="appliance">
+        <i class="fa-solid fa-kitchen-set"></i>
+        <strong>Geladeira</strong>
+        <div class="kwh">60</div>
+        <span>kWh/mês</span>
+      </div>
+      <div class="appliance">
+        <i class="fa-solid fa-tv"></i>
+        <strong>Televisão</strong>
+        <div class="kwh">15</div>
+        <span>kWh/mês</span>
+      </div>
+      <div class="appliance">
+        <i class="fa-solid fa-computer"></i>
+        <strong>Computador</strong>
+        <div class="kwh">18</div>
+        <span>kWh/mês</span>
+      </div>
+      <div class="appliance">
+        <i class="fa-solid fa-lightbulb"></i>
+        <strong>Iluminação</strong>
+        <div class="kwh">20</div>
+        <span>kWh/mês</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. INTERPRETACAO -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title-block">
+        <div class="sec-label">Etapa 7</div>
+        <h2>Interpretação e Validação</h2>
+        <p>Análise crítica dos resultados e aplicação do modelo</p>
+      </div>
+      <div class="card-num">07</div>
+    </div>
+
+    <div class="interp-grid">
+      <div class="interp-box">
+        <h4><i class="fa-solid fa-circle-check"></i> O modelo é coerente porque…</h4>
+        <ul>
+          <li>Sistemas entre 2,5 kWp e 3 kWp correspondem a casos de consumo próximo de 300 kWh mensais</li>
+          <li>O payback obtido (~7 anos) está dentro da faixa típica do mercado brasileiro (5–10 anos)</li>
+          <li>A geração estimada de 2,75 kWp seria suficiente para suprir os 300 kWh/mês da família</li>
+        </ul>
+      </div>
+
+      <div class="interp-box">
+        <h4><i class="fa-solid fa-arrows-rotate"></i> Pode ser aplicado em outras situações?</h4>
+        <ul>
+          <li>Variando o <strong>consumo da residência</strong> (conta mensal)</li>
+          <li>Variando a <strong>potência das placas</strong> disponíveis no mercado</li>
+          <li>Variando a <strong>irradiação solar da cidade</strong> (horas de sol)</li>
+          <li>Variando o <strong>número de moradores</strong> da família</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="concl-box">
+      <strong>Conclusão:</strong> O mesmo cálculo pode ser utilizado para diferentes famílias e diferentes tipos de residência — basta substituir as variáveis.
+      O modelo é especialmente útil para famílias com conta acima de R$ 250/mês, onde o retorno financeiro se torna mais atrativo.
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+</div><!-- /main -->
+
+<div class="footer">
+  <span>IFSC · Instituto Federal de Santa Catarina · Campus Chapecó</span><br>
+  Modelagem Matemática Aplicada · Energia Solar Fotovoltaica · Prof. Flávio Fernandes
+</div>
+
+<script>
+let C1, C2;
+
+function calcular(){
+  const conta     = +document.getElementById('conta').value;
+  const kwh       = +document.getElementById('kwh').value;
+  const sol       = +document.getElementById('sol').value;
+  const potPlaca  = +document.getElementById('potPlaca').value / 1000; // kWp
+  const custo     = +document.getElementById('custo').value;
+  const vida      = +document.getElementById('vida').value;
+  const moradores = +document.getElementById('moradores').value;
+
+  // Cálculos conforme atividade
+  const consumoMes  = conta / kwh;                    // kWh/mês
+  const consumoDia  = consumoMes / 30;                // kWh/dia
+  const geracaoDia  = potPlaca * sol * 0.80;          // kWh/dia por painel (eficiência 80%)
+  const paineis     = Math.ceil(consumoDia / geracaoDia);
+  const potSistema  = paineis * potPlaca;             // kWp
+  const geracaoMes  = geracaoDia * paineis * 30;      // kWh/mês
+  const economiaMes = conta;
+  const economiaAno = economiaMes * 12;
+  const payback     = custo / economiaAno;
+  const retorno     = (economiaAno * vida) - custo;
+  const co2ano      = geracaoMes * 12 * 0.092 / 1000; // toneladas
+  const arvores     = Math.round(co2ano * 1000 / 21);
+
+  document.getElementById('verdict').innerHTML = `
+    <strong> Resposta ao problema de pesquisa:</strong><br>
+    Para suprir o consumo de <strong>${consumoMes.toFixed(0)} kWh/mês</strong> de uma família de
+    <strong>${moradores} pessoas</strong>, são necessários aproximadamente
+    <strong>${paineis} painéis solares</strong> de ${(potPlaca*1000).toFixed(0)} W cada,
+    totalizando um sistema de <strong>${potSistema.toFixed(2)} kWp</strong>.
+    O investimento retorna em <strong>${payback.toFixed(1)} anos</strong>,
+    gerando economia de <strong>R$ ${economiaAno.toFixed(0)}/ano</strong>.
+  `;
+
+  document.getElementById('mets').innerHTML = `
+    <div class="met">
+      <div class="met-icon"><i class="fa-solid fa-gauge-high"></i></div>
+      <div class="met-lbl">Consumo mensal</div>
+      <div class="met-val">${consumoMes.toFixed(0)}</div>
+      <div class="met-sub">kWh/mês</div>
+    </div>
+    <div class="met">
+      <div class="met-icon"><i class="fa-solid fa-calendar-day"></i></div>
+      <div class="met-lbl">Consumo diário</div>
+      <div class="met-val">${consumoDia.toFixed(1)}</div>
+      <div class="met-sub">kWh/dia</div>
+    </div>
+    <div class="met">
+      <div class="met-icon"><i class="fa-solid fa-solar-panel"></i></div>
+      <div class="met-lbl">Painéis solares</div>
+      <div class="met-val">${paineis}</div>
+      <div class="met-sub">painéis necessários</div>
+    </div>
+    <div class="met">
+      <div class="met-icon"><i class="fa-solid fa-bolt"></i></div>
+      <div class="met-lbl">Potência do sistema</div>
+      <div class="met-val">${potSistema.toFixed(2)}</div>
+      <div class="met-sub">kWp instalados</div>
+    </div>
+    <div class="met">
+      <div class="met-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+      <div class="met-lbl">Economia anual</div>
+      <div class="met-val">R$ ${economiaAno.toFixed(0)}</div>
+      <div class="met-sub">economia estimada</div>
+    </div>
+    <div class="met">
+      <div class="met-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+      <div class="met-lbl">Payback</div>
+      <div class="met-val">${payback.toFixed(1)}</div>
+      <div class="met-sub">anos para retorno</div>
+    </div>
+    <div class="met">
+      <div class="met-icon"><i class="fa-solid fa-trophy"></i></div>
+      <div class="met-lbl">Retorno total</div>
+      <div class="met-val">R$ ${(retorno/1000).toFixed(1)}k</div>
+      <div class="met-sub">em ${vida} anos</div>
+    </div>
+    <div class="met">
+      <div class="met-icon"><i class="fa-solid fa-leaf"></i></div>
+      <div class="met-lbl">CO₂ evitado</div>
+      <div class="met-val">${co2ano.toFixed(2)}</div>
+      <div class="met-sub">ton/ano · ≈ ${arvores} árvores</div>
+    </div>
+  `;
+
+  document.getElementById('insight1').innerHTML = `
+    Com ${paineis} painéis de ${(potPlaca*1000).toFixed(0)} W, o investimento de
+    R$ ${custo.toLocaleString('pt-BR')} é recuperado em <strong>${payback.toFixed(1)} anos</strong>.
+    Após esse ponto, a família tem <strong>lucro puro</strong> de R$ ${economiaMes.toFixed(0)}/mês.
+  `;
+
+  document.getElementById('insight2').innerHTML = `
+    Sem energia solar, em ${vida} anos a família gastará
+    <strong>R$ ${(conta*12*vida).toLocaleString('pt-BR')}</strong> apenas com energia elétrica.
+    Com o sistema solar, o custo total é de
+    <strong>R$ ${(custo).toLocaleString('pt-BR')}</strong> — uma diferença de
+    <strong>R$ ${(conta*12*vida - custo).toLocaleString('pt-BR')}</strong>.
+  `;
+
+  const anos   = Array.from({length: vida+1}, (_,i) => i);
+  const solar  = anos.map(a => -custo + economiaAno * a);
+  const normal = anos.map(a => -(conta * 12 * a));
+
+  if(C1) C1.destroy();
+  C1 = new Chart(document.getElementById('chart1'), {
+    type:'line',
+    data:{
+      labels: anos,
+      datasets:[
+        {
+          label:'Com energia solar (R$)',
+          data: solar,
+          borderColor:'#059669',
+          backgroundColor:'rgba(5,150,105,.12)',
+          fill:true, tension:.4, borderWidth:2.5,
+          pointBackgroundColor:'#059669',
+          pointRadius:3
+        },
+        {
+          label:'Sem energia solar (R$)',
+          data: normal,
+          borderColor:'#ef4444',
+          backgroundColor:'rgba(239,68,68,.06)',
+          fill:true, tension:.4, borderWidth:2.5,
+          pointBackgroundColor:'#ef4444',
+          pointRadius:3
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      interaction:{intersect:false,mode:'index'},
+      plugins:{
+        legend:{labels:{font:{family:'DM Sans',size:13},color:'#374151'}},
+        tooltip:{backgroundColor:'#111827',padding:14,cornerRadius:10,titleFont:{family:'DM Sans'},bodyFont:{family:'DM Sans'}}
+      },
+      scales:{
+        y:{
+          ticks:{callback:v=>'R$ '+v.toLocaleString('pt-BR'),font:{family:'DM Sans',size:11},color:'#6b7280'},
+          grid:{color:'rgba(0,0,0,.05)'}
+        },
+        x:{
+          title:{display:true,text:'Anos',font:{family:'DM Sans',size:12},color:'#6b7280'},
+          ticks:{font:{family:'DM Sans',size:11},color:'#6b7280'},
+          grid:{color:'rgba(0,0,0,.03)'}
+        }
+      }
+    }
+  });
+
+  if(C2) C2.destroy();
+  C2 = new Chart(document.getElementById('chart2'), {
+    type:'bar',
+    data:{
+      labels:['1 ano','5 anos','10 anos','15 anos','25 anos'],
+      datasets:[
+        {
+          label:'Com solar (R$)',
+          data:[
+            Math.max(0, custo - economiaAno*1),
+            Math.max(0, custo - economiaAno*5),
+            Math.max(0, custo - economiaAno*10),
+            Math.max(0, custo - economiaAno*15),
+            Math.max(0, custo - economiaAno*25)
+          ],
+          backgroundColor:'rgba(5,150,105,.75)',
+          borderRadius:8,
+          borderSkipped:false
+        },
+        {
+          label:'Sem solar (R$)',
+          data:[
+            conta*12*1,
+            conta*12*5,
+            conta*12*10,
+            conta*12*15,
+            conta*12*25
+          ],
+          backgroundColor:'rgba(239,68,68,.75)',
+          borderRadius:8,
+          borderSkipped:false
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      interaction:{intersect:false,mode:'index'},
+      plugins:{
+        legend:{labels:{font:{family:'DM Sans',size:13},color:'#374151'}},
+        tooltip:{backgroundColor:'#111827',padding:14,cornerRadius:10,
+          callbacks:{label:ctx=>' R$ '+ctx.parsed.y.toLocaleString('pt-BR')},
+          titleFont:{family:'DM Sans'},bodyFont:{family:'DM Sans'}}
+      },
+      scales:{
+        y:{
+          ticks:{callback:v=>'R$ '+v.toLocaleString('pt-BR'),font:{family:'DM Sans',size:11},color:'#6b7280'},
+          grid:{color:'rgba(0,0,0,.05)'}
+        },
+        x:{
+          ticks:{font:{family:'DM Sans',size:12},color:'#6b7280'},
+          grid:{display:false}
+        }
+      }
+    }
+  });
+
+  document.getElementById('resultado-card').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// Calcula ao carregar
+calcular();
+</script>
+</body>
+</html>
