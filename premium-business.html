@@ -7,6 +7,7 @@
   <meta name="description" content="A boutique dental studio delivering exceptional, personalized care in a calm, modern environment. Book your consultation today." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -71,6 +72,20 @@
       color: var(--dark);
       letter-spacing: .06em;
       text-transform: uppercase;
+    }
+
+    .badge-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .result-card-bg {
+      font-size: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .logo-sub {
@@ -1132,7 +1147,7 @@
     <div class="hero-right-img"></div>
     <div class="hero-right-overlay"></div>
     <div class="hero-badge-float">
-      <div class="badge-icon">🏅</div>
+      <div class="badge-icon"><i class="fas fa-medal"></i></div>
       <div class="badge-text">
         <strong>Board Certified</strong>
         <span>American Dental Association</span>
@@ -1245,21 +1260,21 @@
 
     <div class="results-grid">
       <div class="result-card">
-        <div class="result-card-bg">😁</div>
+        <div class="result-card-bg"><i class="fas fa-face-smile"></i></div>
         <div class="result-card-content">
           <h4>Full Smile Makeover</h4>
           <p>Veneers + Whitening</p>
         </div>
       </div>
       <div class="result-card" style="background: var(--charcoal);">
-        <div class="result-card-bg" style="color: white;">🦷</div>
+        <div class="result-card-bg" style="color: white;"><i class="fas fa-tooth"></i></div>
         <div class="result-card-content">
           <h4 style="color: var(--warm-white);">Invisalign Transformation</h4>
           <p style="color: rgba(255,255,255,.5);">14-Month Treatment</p>
         </div>
       </div>
       <div class="result-card">
-        <div class="result-card-bg">✨</div>
+        <div class="result-card-bg"><i class="fas fa-sparkles"></i></div>
         <div class="result-card-content">
           <h4>Dental Implants</h4>
           <p>Full Arch Restoration</p>
@@ -1526,7 +1541,7 @@
 <!-- ── MOBILE STICKY ── -->
 <div class="mobile-sticky">
   <a href="tel:2125550188" class="btn-outline" style="color:rgba(255,255,255,.7); border-color:rgba(255,255,255,.2); flex:1; display:inline-flex; align-items:center; justify-content:center; font-size:.72rem; padding: 12px;">
-    📞 Call Us
+    <i class="fas fa-phone"></i> Call Us
   </a>
   <a href="#booking" class="btn-book btn-book-gold" style="flex:1; display:inline-flex; align-items:center; justify-content:center; font-size:.72rem;">
     Book Consultation
